@@ -24,7 +24,9 @@ def list_categories(session: Session = Depends(get_session)) -> list[Category]:
 
 
 @router.patch("/{cat_id}")
-def rename_category(cat_id: int, body: CategoryIn, session: Session = Depends(get_session)) -> Category:
+def rename_category(
+    cat_id: int, body: CategoryIn, session: Session = Depends(get_session)
+) -> Category:
     return service.rename(session, cat_id, body.name)
 
 
