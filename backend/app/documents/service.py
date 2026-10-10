@@ -35,12 +35,8 @@ def set_content(session: Session, doc_id: int, content: str) -> Document:
     raise NotImplementedError
 
 
-def set_meta(
-    session: Session,
-    doc_id: int,
-    title: str | None = None,
-    category_id: int | None = None,
-) -> Document:
+def set_meta(session: Session, doc_id: int, changes: dict) -> Document:
+    """只更新明确提供的 title/category_id；分类为 None 时清空。不提交。"""
     raise NotImplementedError
 
 

@@ -1,5 +1,3 @@
-from sqlmodel import Session
-
 from app.qa.models import AskResult, Verdict
 from app.qa.ports import KnowledgeAccess, Passage
 

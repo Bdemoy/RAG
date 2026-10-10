@@ -8,7 +8,7 @@ class Document(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     title: str
-    content: str
+    content: str  # 解析规整后的完整正文，索引输入与文本块 offset 的基准
     source_type: str
     content_format: str
     category_id: int | None = Field(

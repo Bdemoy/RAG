@@ -50,7 +50,8 @@ def get_document(doc_id: int, session: Session = Depends(get_session)) -> Docume
 def update_meta(
     doc_id: int, body: MetaIn, session: Session = Depends(get_session)
 ) -> Document:
-    return usecases.update_meta(session, doc_id, body.title, body.category_id)
+    changes = body.model_dump(exclude_unset=True)
+    return usecases.update_meta(session, doc_id, changes)
 
 
 @router.put("/{doc_id}/content")
@@ -63,3 +64,4 @@ def update_content(
 @router.delete("/{doc_id}", status_code=204)
 def delete_document(doc_id: int, session: Session = Depends(get_session)) -> None:
     service.delete(session, doc_id)
+    session.commit()

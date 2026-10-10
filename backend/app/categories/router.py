@@ -14,8 +14,12 @@ class CategoryIn(BaseModel):
 
 
 @router.post("", status_code=201)
-def create_category(body: CategoryIn, session: Session = Depends(get_session)) -> Category:
-    return service.create(session, body.name)
+def create_category(
+    body: CategoryIn, session: Session = Depends(get_session)
+) -> Category:
+    category = service.create(session, body.name)
+    session.commit()
+    return category
 
 
 @router.get("")
@@ -27,9 +31,12 @@ def list_categories(session: Session = Depends(get_session)) -> list[Category]:
 def rename_category(
     cat_id: int, body: CategoryIn, session: Session = Depends(get_session)
 ) -> Category:
-    return service.rename(session, cat_id, body.name)
+    category = service.rename(session, cat_id, body.name)
+    session.commit()
+    return category
 
 
 @router.delete("/{cat_id}", status_code=204)
 def delete_category(cat_id: int, session: Session = Depends(get_session)) -> None:
     service.delete(session, cat_id)
+    session.commit()
