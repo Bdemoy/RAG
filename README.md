@@ -2,14 +2,29 @@
 
 个人学习资料知识库。计划支持课程笔记导入与分类、基于资料的问答，以及原文引用核对。
 
-> 当前阶段：后端骨架。已提供应用入口、数据模型、函数签名、路由和启动测试；业务函数仍为 `raise NotImplementedError`。资料管理、分类和问答功能待后续 PR 实现，前端尚未开始。
+> 当前阶段：已完成后端骨架和 Categories 模块。支持分类创建、查询、重命名、删除，并提供分类存在性校验。资料管理、索引和问答业务仍待后续 PR 实现，前端尚未开始。
 
 ## 本阶段可验证的内容
 
 - FastAPI 应用启动时通过 `init_db()` 创建 categories、documents、chunks 三张表。
 - `/health` 返回 `{"status":"ok"}`，`/docs` 提供接口文档。
-- pytest 检查健康接口、业务表存在和文档页面可访问。
+- 分类接口支持增删改查；重名返回 409，分类不存在返回 404。删除分类保留关联资料和文本块，资料变为未分类。
+- `ensure_exists` 供 usecases 校验分类 ID；`None` 表示未分类，直接通过。
+- pytest 检查应用启动、分类业务和 HTTP 接口，包括失败时的事务回滚。
 - GitHub Actions 在 PR 和 main 更新时，使用临时 PostgreSQL 运行锁定依赖安装和 pytest。
+
+## 分类接口
+
+| 方法 | 路径 | 行为 |
+|---|---|---|
+| POST | `/categories` | 创建分类，返回 201 和完整分类信息；重名返回 409 |
+| GET | `/categories` | 返回分类列表；没有分类时返回空列表 |
+| PATCH | `/categories/{id}` | 修改名称，保留 ID 和创建时间；不存在返回 404，重名返回 409 |
+| DELETE | `/categories/{id}` | 删除分类，返回 204；不存在返回 404 |
+
+创建和改名的请求正文为 `{"name": "高等数学"}`。分类信息包含 `id`、`name`、`created_at`。
+
+模块职责、调用流程和事务边界见 [分类模块设计](doc/categories.md)。
 
 ## 计划功能
 
@@ -54,6 +69,7 @@ qa 通过 `KnowledgeAccess` 接口取得检索能力，由 adapters 连接 index
 ## 目录
 
 ```text
+doc/categories.md
 backend/
 ├── app/
 │   ├── main.py
@@ -64,7 +80,11 @@ backend/
 │   ├── qa/
 │   ├── adapters/
 │   └── infrastructure/
-├── tests/test_health.py
+├── tests/
+│   ├── conftest.py
+│   ├── test_health.py
+│   ├── test_categories.py
+│   └── test_categories_api.py
 ├── .env.example
 ├── pyproject.toml
 └── uv.lock
@@ -93,11 +113,11 @@ cp -n .env.example .env
 uv run --frozen uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-打开 [健康接口](http://127.0.0.1:8000/health) 和 [接口文档](http://127.0.0.1:8000/docs)。业务接口仍为占位实现。
+打开 [健康接口](http://127.0.0.1:8000/health) 和 [接口文档](http://127.0.0.1:8000/docs)。可在接口文档中调用分类接口；资料管理和问答接口仍为占位实现。
 
 ## 测试与 CI
 
-测试会执行应用启动和建表流程。先在 PostgreSQL 中创建独立的测试库：
+测试会执行应用启动和建表流程。分类测试为每项测试创建独立 schema，结束后清理；测试连接用户需要在测试库中拥有创建 schema 的权限。先在 PostgreSQL 中创建独立的测试库：
 
 ```bash
 createdb -h 127.0.0.1 -p 5432 -U postgres mydocagent_test
