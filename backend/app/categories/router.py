@@ -19,6 +19,7 @@ def create_category(
 ) -> Category:
     category = service.create(session, body.name)
     session.commit()
+    session.refresh(category)
     return category
 
 
@@ -33,10 +34,12 @@ def rename_category(
 ) -> Category:
     category = service.rename(session, cat_id, body.name)
     session.commit()
+    session.refresh(category)
     return category
 
 
 @router.delete("/{cat_id}", status_code=204)
 def delete_category(cat_id: int, session: Session = Depends(get_session)) -> None:
     service.delete(session, cat_id)
+
     session.commit()
