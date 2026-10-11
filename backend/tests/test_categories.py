@@ -1,39 +1,13 @@
 from datetime import UTC, datetime
-from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import text
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session
 
 from app.categories import service
 from app.categories.models import Category
 from app.documents.models import Document
 from app.indexing.models import Chunk
-from app.infrastructure.db import engine
-
-
-@pytest.fixture
-def db_engine():
-    schema = "categories_test_" + uuid4().hex
-    with engine.begin() as connection:
-        connection.execute(text(f'CREATE SCHEMA "{schema}"'))
-    test_engine = create_engine(
-        engine.url, connect_args={"options": f"-csearch_path={schema}"}
-    )
-    try:
-        SQLModel.metadata.create_all(test_engine)
-        yield test_engine
-    finally:
-        test_engine.dispose()
-        with engine.begin() as connection:
-            connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
-
-
-@pytest.fixture
-def session(db_engine):
-    with Session(db_engine) as session:
-        yield session
 
 
 def test_list_empty(session):
