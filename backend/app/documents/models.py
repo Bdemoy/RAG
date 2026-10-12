@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -14,5 +14,5 @@ class Document(SQLModel, table=True):
     category_id: int | None = Field(
         default=None, foreign_key="categories.id", ondelete="SET NULL"
     )
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
