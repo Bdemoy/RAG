@@ -1,7 +1,6 @@
 from sqlmodel import Session
 from openai import OpenAI
 from app.infrastructure import config
-
 from app.indexing.models import ChunkDraft, SearchHit
 import re
 
@@ -90,7 +89,27 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
 def prepare_chunks(content: str) -> list[ChunkDraft]:
     """切分 + 批量生成向量。不写库；Embedding 失败直接抛错。"""
-    raise NotImplementedError
+    parts=split_content(content)
+    if not parts:
+        return []
+
+    texts=[text for _ , text , _ , in parts]
+    embeddings=embed_texts(texts)
+
+    drafts:list[ChunkDraft]=[]
+    for i,(part,embedding) in enumerate(zip(parts,embeddings,strict=True)):
+        heading,text,start,end=part
+        drafts.append(
+            ChunkDraft(
+                index=i,
+                heading=heading,
+                content=text,
+                start_offset=start,
+                end_offset=end,
+                embedding=embedding
+            )
+        )
+    return drafts
 
 
 def save_chunks(session: Session, document_id: int, drafts: list[ChunkDraft]) -> int:
